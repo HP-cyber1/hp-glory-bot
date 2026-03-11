@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP AI System - Complete</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #0a0c10;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: #111520;
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 0 20px #00ffff;
+            position: relative;
+        }
+        
+        .corner {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: #00ffff;
+            border-style: solid;
+            border-width: 0;
+        }
+        
+        .corner-tl { top: 10px; left: 10px; border-top-width: 2px; border-left-width: 2px; }
+        .corner-tr { top: 10px; right: 10px; border-top-width: 2px; border-right-width: 2px; }
+        .corner-bl { bottom: 10px; left: 10px; border-bottom-width: 2px; border-left-width: 2px; }
+        .corner-br { bottom: 10px; right: 10px; border-bottom-width: 2px; border-right-width: 2px; }
+        
+        .emoji {
+            font-size: 60px;
+            text-align: center;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        h1, h2, h3 {
+            color: #00ffff;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        
+        .status-container {
+            background-color: #1a1f2a;
+            border: 1px solid #00ffff;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .status-line {
+            color: #00ffff;
+            font-size: 16px;
+            margin: 8px 0;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn { to { opacity: 1; } }
+        
+        .system-status {
+            color: #ffffff;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #1a1f2a;
+            border: 1px solid #00ffff;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #00ffff, #88ffff, #00ffff);
+            transition: width 0.3s;
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        .section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            color: #ffffff;
+            font-size: 18px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00ffff;
+            padding-left: 10px;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a1f2a;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        select {
+            cursor: pointer;
+        }
+        
+        select option {
+            background-color: #1a1f2a;
+            color: #00ffff;
+        }
+        
+        .bot-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .bot-option {
+            background-color: #1a1f2a;
+            border: 1px solid #00ffff;
+            padding: 15px;
+            text-align: center;
+            color: #00ffff;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+        
+        .bot-option:hover, .bot-option.selected {
+            background-color: #00ffff;
+            color: #1a1f2a;
+        }
+        
+        .next-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .next-btn:hover {
+            background-color: #00ffff;
+            color: #1a1f2a;
+            box-shadow: 0 0 20px #00ffff;
+        }
+        
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #1a1f2a;
+            border-top: 3px solid #00ffff;
+            border-radius: 50%;
+            margin: 20px auto;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .countdown {
+            color: #88ff88;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .redirect-message {
+            color: #88ff88;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 16px;
+            background-color: #00ffff;
+            margin-left: 5px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+        
+        .stat-box {
+            text-align: center;
+            background-color: #1a1f2a;
+            border: 1px solid #00ffff;
+            padding: 20px;
+            border-radius: 10px;
+            width: 45%;
+        }
+        
+        .stat-label {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .channel-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .channel-link {
+            color: #00ffff;
+            text-decoration: none;
+            border: 1px solid #00ffff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .channel-link:hover {
+            background-color: #00ffff;
+            color: #1a1f2a;
+        }
+        
+        .info-box {
+            background-color: #1a1f2a;
+            border: 1px solid #00ffff;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .info-text {
+            color: #00ffff;
+            font-size: 18px;
+            margin: 15px 0;
+        }
+        
+        .highlight {
+            color: #ffff00;
+            font-weight: bold;
+        }
+        
+        .timer-box {
+            font-size: 48px;
+            color: #00ffff;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .action-btn {
+            background-color: transparent;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .action-btn:hover {
+            background-color: #00ffff;
+            color: #1a1f2a;
+        }
+        
+        .action-btn.success {
+            background-color: #00ff00;
+            border-color: #00ff00;
+            color: #1a1f2a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        
+        <!-- Page 1: Boot Screen -->
+        <div id="page1" class="page active">
+            <div class="emoji">🤖</div>
+            <h1>HP AI</h1>
+            
+            <div class="status-container" id="bootStatus"></div>
+            
+            <div class="system-status">
+                SYSTEM STATUS: <span id="statusText">INITIALIZING... 0%</span>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="system-message" id="systemMessage" style="color: #00ffff; text-align: center; margin-top: 20px;">
+                HP AI v1.0.0 | System Ready: 0% | Connection: Establishing
+                <span class="cursor"></span>
+            </div>
+        </div>
+        
+        <!-- Page 2: Home Panel -->
+        <div id="page2" class="page">
+            <h1>HP SYSTEM PANEL</h1>
+            
+            <div class="section">
+                <div class="section-title">Enter Guild UID</div>
+                <input type="text" id="uid" placeholder="Enter your UID..." value="123456789">
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Select Device</div>
+                <select id="device">
+                    <option>📱 Select Device</option>
+                    <option>🍎 Apple</option>
+                    <option>📱 Samsung</option>
+                    <option>🔥 Xiaomi</option>
+                    <option>⚡ Realme</option>
+                    <option>🚀 OnePlus</option>
+                    <option>🎮 Asus ROG</option>
+                    <option>💠 Oppo</option>
+                    <option>🔵 Vivo</option>
+                    <option>🌐 Huawei</option>
+                    <option>⭐ Honor</option>
+                    <option>📷 Google Pixel</option>
+                </select>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Select Country</div>
+                <select id="country">
+                    <option>🌍 Select Country</option>
+                    <option>🇮🇳 India</option>
+                    <option>🇧🇷 Brazil</option>
+                    <option>🇮🇩 Indonesia</option>
+                    <option>🇹🇭 Thailand</option>
+                    <option>🇻🇳 Vietnam</option>
+                    <option>🇧🇩 Bangladesh</option>
+                    <option>🇵🇰 Pakistan</option>
+                    <option>🇲🇾 Malaysia</option>
+                </select>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Select Bot Type</div>
+                <div class="bot-options">
+                    <div class="bot-option" onclick="selectBot(this)">🤖 GLORY BOT</div>
+                    <div class="bot-option" onclick="selectBot(this)">👾 SHADOW BOT</div>
+                    <div class="bot-option" onclick="selectBot(this)">🦾 TITAN BOT</div>
+                    <div class="bot-option" onclick="selectBot(this)">⚡ PHANTOM BOT</div>
+                </div>
+            </div>
+            
+            <button class="next-btn" onclick="goToPage(3)">NEXT →</button>
+        </div>
+        
+        <!-- Page 3: Final/Verify Page -->
+        <div id="page3" class="page">
+            <h2>HP VERIFY</h2>
+            
+            <div class="info-box">
+                <div class="info-text">
+                    Region: <span class="highlight" id="displayRegion">null</span> | 
+                    Device: <span class="highlight" id="displayDevice">null</span> | 
+                    <span class="highlight" id="displayBots">1 Bots</span>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn" id="likeBtn" onclick="completeAction('like')">👍 Like & Comment Video <span id="likeTimer" style="float: right;">⏳</span></button>
+                <button class="action-btn" id="subscribeBtn" onclick="window.open('https://www.youtube.com/@hpgaming6247', '_blank'); completeAction('subscribe')">🔔 Subscribe Channel <span id="subscribeTimer" style="float: right;">⏳</span></button>
+            </div>
+            
+            <button class="next-btn" id="finalNextBtn" onclick="goToPage(4)" style="display: none;">CONTINUE →</button>
+        </div>
+        
+        <!-- Page 4: Verification -->
+        <div id="page4" class="page">
+            <h2>Initializing Secure Environment</h2>
+            
+            <div class="status-container" style="text-align: center;">
+                <div class="loader"></div>
+                <div class="status-line" id="verifyStatus">Launching system... Please wait</div>
+            </div>
+            
+            <div class="countdown" id="countdown">Redirecting in 3 seconds...</div>
+        </div>
+        
+        <!-- Page 5: Execution -->
+        <div id="page5" class="page">
+            <h1>HP AI SYSTEM</h1>
+            
+            <div class="status-container" id="executionStatus"></div>
+            
+            <div class="progress-container">
+                <div class="progress-text" style="color: #ffff00; text-align: center; margin-bottom: 10px;">AI SYSTEM PROCESSING...</div>
+                <div class="progress-bar" style="height: 30px;">
+                    <div class="progress-fill" id="executionProgress"></div>
+                </div>
+                <div style="text-align: center; margin-top: 10px; color: #ffffff;" id="progressPercent">0%</div>
+            </div>
+        </div>
+        
+        <!-- Page 6: Final Page -->
+        <div id="page6" class="page">
+            <div class="emoji">✅</div>
+            <h2>HP BOT</h2>
+            <h3>Guild Glory Bot Connecting Successful</h3>
+            
+            <div class="status-container" style="text-align: center;">
+                <div class="status-line" id="finalStatus">Please Wait...</div>
+                <div class="loader" style="width: 30px; height: 30px;"></div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stat-box">
+                    <div class="stat-label">🤖 Live Bots</div>
+                    <div class="stat-value" id="liveBots">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">⚙ Busy Bots</div>
+                    <div class="stat-value" id="busyBots">0</div>
+                </div>
+            </div>
+            
+            <div class="status-line" id="networkStatus" style="text-align: center; margin: 20px 0;">
+                Initializing AI Network...
+            </div>
+            
+            <div class="channel-links">
+                <a href="https://www.youtube.com/@hpgaming6247" target="_blank" class="channel-link">▶ Visit YouTube Channel</a>
+                <a href="#" class="channel-link" onclick="alert('Telegram Channel Link - HP Community')">✈ Join Telegram Channel</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation functions
+        function goToPage(pageNumber) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById('page' + pageNumber).classList.add('active');
+            
+            // Initialize page specific functions
+            if (pageNumber === 1) initBoot();
+            if (pageNumber === 3) initFinalVerifyPage();
+            if (pageNumber === 4) initVerification();
+            if (pageNumber === 5) initExecution();
+            if (pageNumber === 6) initFinalPage();
+        }
+        
+        function selectBot(element) {
+            document.querySelectorAll('.bot-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+        
+        // Page 1: Boot Sequence
+        function initBoot() {
+            const bootStatus = document.getElementById('bootStatus');
+            const progressFill = document.getElementById('progressFill');
+            const statusText = document.getElementById('statusText');
+            const systemMessage = document.getElementById('systemMessage');
+            
+            bootStatus.innerHTML = '<div class="status-line">> Booting HP AI Core...</div>';
+            
+            const messages = [
+                "> Booting HP AI Core...",
+                "> Loading neural networks...",
+                "> Initializing quantum processors...",
+                "> Calibrating response systems...",
+                "> Establishing secure connection...",
+                "> Loading personality matrix...",
+                "> Syncing with HP cloud...",
+                "> Optimizing response algorithms...",
+                "> Running final diagnostics..."
+            ];
+            
+            let count = 1;
+            
+            const interval = setInterval(function() {
+                if (count < messages.length) {
+                    const newLine = document.createElement('div');
+                    newLine.className = 'status-line';
+                    newLine.textContent = messages[count];
+                    bootStatus.appendChild(newLine);
+                    bootStatus.scrollTop = bootStatus.scrollHeight;
+                    
+                    count++;
+                    let progress = Math.floor((count / messages.length) * 90);
+                    progressFill.style.width = progress + '%';
+                    statusText.innerHTML = 'INITIALIZING... ' + progress + '%';
+                    systemMessage.innerHTML = `HP AI v1.0.0 | System Ready: ${progress}% | Connection: Establishing <span class="cursor"></span>`;
+                } else {
+                    clearInterval(interval);
+                    
+                    // Complete boot
+                    progressFill.style.width = '100%';
+                    statusText.innerHTML = 'ONLINE - READY';
+                    statusText.style.color = '#88ff88';
+                    
+                    const completeLine = document.createElement('div');
+                    completeLine.className = 'status-line';
+                    completeLine.style.color = '#88ff88';
+                    completeLine.textContent = '> System ready! Redirecting...';
+                    bootStatus.appendChild(completeLine);
+                    
+                    systemMessage.innerHTML = 'HP AI v1.0.0 | System Ready: 100% | Connection: Stable';
+                    
+                    // Auto redirect to page 2
+                    setTimeout(() => goToPage(2), 2000);
+                }
+            }, 700);
+        }
+        
+        // Page 3: Final/Verify Page
+        function initFinalVerifyPage() {
+            // Get selected values from page 2
+            const device = document.getElementById('device').value;
+            const country = document.getElementById('country').value;
+            const selectedBot = document.querySelector('.bot-option.selected');
+            const botText = selectedBot ? selectedBot.textContent : 'GLORY BOT';
+            
+            document.getElementById('displayRegion').textContent = country.replace('🌍 ', '');
+            document.getElementById('displayDevice').textContent = device.replace('📱 ', '');
+            document.getElementById('displayBots').textContent = '1 Bot';
+            
+            // Reset buttons
+            document.getElementById('likeBtn').classList.remove('success');
+            document.getElementById('subscribeBtn').classList.remove('success');
+            document.getElementById('likeBtn').innerHTML = '👍 Like & Comment Video <span id="likeTimer" style="float: right;">⏳</span>';
+            document.getElementById('subscribeBtn').innerHTML = '🔔 Subscribe Channel <span id="subscribeTimer" style="float: right;">⏳</span>';
+            document.getElementById('finalNextBtn').style.display = 'none';
+        }
+        
+        // Action completion for page 3
+        function completeAction(action) {
+            const btn = document.getElementById(action + 'Btn');
+            const timer = document.getElementById(action + 'Timer');
+            
+            btn.classList.add('success');
+            timer.innerHTML = '✅';
+            
+            // Check if both actions are completed
+            const likeDone = document.getElementById('likeBtn').classList.contains('success');
+            const subscribeDone = document.getElementById('subscribeBtn').classList.contains('success');
+            
+            if (likeDone && subscribeDone) {
+                document.getElementById('finalNextBtn').style.display = 'block';
+            }
+        }
+        
+        // Page 4: Verification
+        function initVerification() {
+            const verifyStatus = document.getElementById('verifyStatus');
+            const countdownEl = document.getElementById('countdown');
+            let seconds = 3;
+            
+            verifyStatus.textContent = 'Launching system... Please wait';
+            countdownEl.textContent = `Redirecting in ${seconds} seconds...`;
+            
+            const interval = setInterval(function() {
+                seconds--;
+                countdownEl.textContent = `Redirecting in ${seconds} seconds...`;
+                
+                if (seconds === 0) {
+                    clearInterval(interval);
+                    verifyStatus.textContent = '✓ Verification complete!';
+                    countdownEl.textContent = 'Redirecting now...';
+                    setTimeout(() => goToPage(5), 500);
+                }
+            }, 1000);
+        }
+        
+        // Page 5: Execution
+        function initExecution() {
+            const executionStatus = document.getElementById('executionStatus');
+            const progressFill = document.getElementById('executionProgress');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            executionStatus.innerHTML = '';
+            progressFill.style.width = '0%';
+            progressPercent.textContent = '0%';
+            
+            const messages = [
+                "> Executing exploit...",
+                "> Accessing encrypted nodes...",
+                "> Decrypting authentication...",
+                "> Uploading bot framework...",
+                "> Installing AI modules...",
+                "> Initializing secure connection...",
+                "> System vulnerability found...",
+                "> Scanning UID database...",
+                "> Loading encrypted assets...",
+                "> Bypassing firewall...",
+                "> Injecting code...",
+                "> Finalizing breach..."
+            ];
+            
+            let messageIndex = 0;
+            let progress = 0;
+            
+            // Add messages
+            const msgInterval = setInterval(function() {
+                if (messageIndex < messages.length) {
+                    const line = document.createElement('div');
+                    line.className = 'status-line';
+                    line.textContent = messages[messageIndex];
+                    executionStatus.appendChild(line);
+                    executionStatus.scrollTop = executionStatus.scrollHeight;
+                    messageIndex++;
+                } else {
+                    // Add random messages
+                    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+                    const line = document.createElement('div');
+                    line.className = 'status-line';
+                    line.style.color = '#88ffff';
+                    line.textContent = '> ' + randomMsg + ' [RETRY]';
+                    executionStatus.appendChild(line);
+                    executionStatus.scrollTop = executionStatus.scrollHeight;
+                }
+            }, 500);
+            
+            // Update progress
+            const progressInterval = setInterval(function() {
+                if (progress < 100) {
+                    progress += Math.random() * 2;
+                    if (progress > 100) progress = 100;
+                    
+                    progressFill.style.width = progress + '%';
+                    progressPercent.textContent = Math.floor(progress) + '%';
+                } else {
+                    clearInterval(progressInterval);
+                    clearInterval(msgInterval);
+                    
+                    const finalLine = document.createElement('div');
+                    finalLine.className = 'status-line';
+                    finalLine.style.color = '#88ff88';
+                    finalLine.style.fontWeight = 'bold';
+                    finalLine.textContent = '> SYSTEM BREACH COMPLETE! Redirecting to final page...';
+                    executionStatus.appendChild(finalLine);
+                    
+                    // Redirect to final page
+                    setTimeout(() => goToPage(6), 2000);
+                }
+            }, 300);
+        }
+        
+        // Page 6: Final Page
+        function initFinalPage() {
+            const liveBots = document.getElementById('liveBots');
+            const busyBots = document.getElementById('busyBots');
+            const networkStatus = document.getElementById('networkStatus');
+            const finalStatus = document.getElementById('finalStatus');
+            
+            let live = 0;
+            let busy = 0;
+            
+            // Animate bot counts
+            const countInterval = setInterval(function() {
+                if (live < 24) {
+                    live += Math.floor(Math.random() * 3) + 1;
+                    if (live > 24) live = 24;
+                }
+                
+                if (busy < 8) {
+                    busy += Math.floor(Math.random() * 2);
+                    if (busy > 8) busy = 8;
+                }
+                
+                liveBots.textContent = live;
+                busyBots.textContent = busy;
+                
+                // Update network status
+                const statuses = [
+                    "Initializing AI Network...",
+                    "Connecting to nodes...",
+                    "Establishing secure channels...",
+                    "Network ready!",
+                    "AI Network Connected Successfully!"
+                ];
+                
+                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                networkStatus.textContent = randomStatus;
+                
+                if (live === 24 && busy === 8) {
+                    clearInterval(countInterval);
+                    finalStatus.textContent = "✓ Connection Successful!";
+                    networkStatus.textContent = "✓ AI Network Fully Operational";
+                }
+            }, 500);
+        }
+        
+        // Start the boot sequence when page loads
+        window.onload = function() {
+            initBoot();
+        };
+    </script>
+</body>
+</html>
